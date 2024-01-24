@@ -1,113 +1,291 @@
-import Image from "next/image";
+"use client";
+
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { shuffle } from "@/hooks/utils";
+import { useEffect, useState } from "react";
+import { BiSolidLock, BiSolidLockOpen } from "react-icons/bi";
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+	const [loading, setLoading] = useState(true);
+	const [cards, setCards] = useState<Card[]>([]);
+	const [deck, setDeck] = useState<Card[]>([]);
+	const [name, setName] = useState("");
+	const [order, setOrder] = useState<Order>("name");
+	const [direction, setDirection] = useState<Direction>("ASC");
+	const [isLocked, setIsLocked] = useState<boolean>(false);
+	const [remainingCards, setRemainingCards] = useState<Card[]>([]);
+	const [blobResults, setBlobResults] = useState<BlobResults>([]);
+	const tries = 10000;
+	const { toast } = useToast();
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+	useEffect(() => {
+		fetchCards();
+	}, []);
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+	const fetchCards = async () => {
+		const data = await fetch("/api/get-cards").then((res) => res.json());
+		for (const card of data) {
+			setCards((cards) => [...cards, card]);
+		}
+		setCards((cards) =>
+			cards
+				.filter((card, index, self) => index === self.findIndex((c) => c.name === card.name))
+				.filter((card) => card.status === "released")
+				.filter((card) => card.source !== "None")
+				.filter((card) => card.source !== "Not Available"),
+		);
+	};
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+	const clickCard = (card: Card) => {
+		if (deck.find((c) => c.cid === card.cid)) {
+			setDeck((deck) => deck.filter((c) => c.cid !== card.cid));
+		} else {
+			if (deck.length < 12) {
+				setDeck((deck) => [...deck, card]);
+			}
+		}
+		console.log(card.name);
+	};
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+	const clickDeckCard = (card: Card) => {
+		if (isLocked) {
+			if (remainingCards.find((c) => c.cid === card.cid)) {
+				setRemainingCards((remainingCards) => remainingCards.filter((c) => c.cid !== card.cid));
+			} else {
+				setRemainingCards((remainingCards) => [...remainingCards, card]);
+			}
+		} else {
+			setDeck((deck) => deck.filter((c) => c.cid !== card.cid));
+		}
+	};
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+	const calculateBlobPower = () => {
+		let blobPower = 0;
+		let remainingCardsInDeck = remainingCards;
+		while (blobPower < 15 && remainingCardsInDeck.length > 0) {
+			remainingCardsInDeck = shuffle(remainingCardsInDeck);
+			blobPower += remainingCardsInDeck.pop()?.power as number;
+		}
+		return blobPower;
+	};
+
+	const calculateBlobFrequency = () => {
+		let results: BlobResults = [];
+		for (let i = 0; i < tries; i++) {
+			const power = calculateBlobPower();
+			if (results.some((r) => r.power == power)) {
+				results = results.map((r) => {
+					if (r.power == power) {
+						return {
+							power: r.power,
+							frequency: r.frequency + 1,
+						};
+					}
+					return r;
+				});
+			} else {
+				results = [...results, { power: power, frequency: 1 }];
+			}
+		}
+		setBlobResults(results);
+	};
+
+	const generateDeckCode = () => {
+		const jsonCode: JsonDeckCode = {
+			Cards: [
+				...deck.map((card) => {
+					return {
+						CardDefId: card.name.replaceAll(" ", ""),
+					};
+				}),
+			],
+		};
+		const base64Code = btoa(JSON.stringify(jsonCode));
+		navigator.clipboard.writeText(base64Code);
+		toast({
+			title: "Deck code copied to clipboard!",
+			description: "You can now import the deck in-game.",
+		});
+	};
+
+	const generateDeck = (base64Code: string) => {
+		const jsonCode: JsonDeckCode = JSON.parse(atob(base64Code));
+		const deckTemp: Card[] = [];
+		console.log(jsonCode);
+		for (const card of jsonCode.Cards) {
+			const cardDefId = card.CardDefId;
+			// const cardName is equal to card.name but whenever the following letter is a capital letter, it adds a space before it (unless it's the first letter or the letter before is a space or a -). it also adds a space before a number if the letter before is a letter. it also adds a space if the three next letters are "the" and the next letter is a capital letter.
+			let cardName = formatCardName(cardDefId);
+			console.log(cardName);
+			const cardToAdd = cards.find((c) => c.name === cardName);
+			if (cardToAdd) {
+				deckTemp.push(cardToAdd);
+			}
+		}
+		setDeck(deckTemp);
+		console.log(deckTemp);
+	};
+
+	const formatCardName = (cardDefId: string): string => {
+		let cardName = "";
+		for (let i = 0; i < cardDefId.length; i++) {
+			const previousChar = cardDefId[i - 1];
+			const currentChar = cardDefId[i];
+			const nextChar = cardDefId[i + 1];
+			const nextNextChar = cardDefId[i + 2];
+			const nextNextNextChar = cardDefId[i + 3];
+			cardName += currentChar;
+			if (i > 0 && nextChar && previousChar !== " " && previousChar !== "-") {
+				if (nextChar.match(/[A-Z]/)) {
+					cardName += " ";
+				} else if (nextChar.match(/[0-9]/) && currentChar.match(/[A-z]/)) {
+					cardName += " ";
+				} else if (
+					nextNextChar &&
+					nextNextNextChar &&
+					(currentChar === "t" || currentChar === "T") &&
+					nextChar === "h" &&
+					nextNextChar === "e" &&
+					nextNextNextChar.match(/[A-Z]/)
+				) {
+					cardName += " ";
+				}
+			}
+		}
+		return cardName;
+	};
+
+	return (
+		<div className="flex min-h-screen flex-col items-center justify-between p-10">
+			<ThemeToggle />
+			<Button variant="default">Button</Button>
+			{/* input that takes the base64 with a button that calls generateDeck() */}
+			<input
+				type="text"
+				placeholder="Deck code"
+				onChange={(e) => generateDeck(e.target.value)}
+				className="rounded-md border border-gray-400 px-2 py-1 text-black"
+			/>
+			<div>
+				<h1 className="text-4xl font-bold">Deck Builder</h1>
+				<p className="text-xl">Click on a card to add it to your deck</p>
+				<button className="rounded-md border border-gray-400 px-4 py-2" onClick={generateDeckCode}>
+					Generate deck code
+				</button>
+			</div>
+			<div>
+				<div>
+					<h2 className="text-2xl font-bold">Deck</h2>
+					<div className="grid w-1/2 grid-cols-6 gap-2">
+						{deck
+							.sort((a, b) => a.cost - b.cost)
+							.map((card) => {
+								return (
+									<img
+										key={card.cid}
+										src={card.art}
+										alt={card.name}
+										className={`cursor-pointer object-cover ${
+											remainingCards.find((c) => c.cid === card.cid) || !isLocked ? "opacity-100" : "opacity-50"
+										}`}
+										onClick={() => clickDeckCard(card)}
+									/>
+								);
+							})}
+					</div>
+				</div>
+				<div className={`${deck.length == 12 ? "flex" : "hidden"}`}>
+					<button
+						className="rounded-md border border-gray-400 px-4 py-2"
+						onClick={() => {
+							setIsLocked((isLocked) => !isLocked);
+							setRemainingCards(deck);
+						}}
+					>
+						{isLocked ? <BiSolidLock /> : <BiSolidLockOpen />}
+					</button>
+					<div className={`${isLocked ? "flex" : "hidden"} flex-col items-center justify-between gap-2`}>
+						<button className="rounded-md border border-gray-400 px-4 py-2" onClick={calculateBlobFrequency}>
+							Blob Tool
+						</button>
+						<div>
+							{blobResults.map((result, _) => {
+								return (
+									<div key={_}>
+										<p>
+											{result.power}: {Math.round((result.frequency / tries) * 100)}%
+										</p>
+									</div>
+								);
+							})}
+						</div>
+					</div>
+				</div>
+			</div>
+			<div className={`${isLocked ? "hidden" : "flex"} flex-col items-center justify-between gap-2`}>
+				<div className="flex items-center justify-between gap-2">
+					<div className="flex items-center">
+						{/* <label className="mr-2">Name:</label> */}
+						<input
+							type="text"
+							placeholder="Name"
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							className="rounded-md border border-gray-400 px-2 py-1 text-black"
+						/>
+					</div>
+					<div className="flex items-center gap-1">
+						<label className="mr-2">Sort by:</label>
+						<select
+							value={order}
+							onChange={(e) => setOrder(e.target.value as Order)}
+							className="rounded-md border border-gray-400 px-2 py-1 text-black"
+						>
+							<option value="name">Name</option>
+							<option value="cost">Cost</option>
+							<option value="power">Power</option>
+						</select>
+						<select
+							value={direction}
+							onChange={(e) => setDirection(e.target.value as Direction)}
+							className="rounded-md border border-gray-400 px-2 py-1 text-black"
+						>
+							<option value="ASC">Ascending</option>
+							<option value="DESC">Descending</option>
+						</select>
+					</div>
+				</div>
+				<div className="grid grid-cols-8 gap-2">
+					{cards
+						.filter((card) => card.name.toLowerCase().includes(name.toLowerCase()))
+						.sort((a, b) => {
+							if (order === "name") {
+								return direction === "ASC" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+							} else if (order === "cost") {
+								return direction === "ASC" ? a.cost - b.cost : b.cost - a.cost;
+							} else if (order === "power") {
+								return direction === "ASC" ? a.power - b.power : b.power - a.power;
+							} else {
+								return 0;
+							}
+						})
+						.map((card) => {
+							return (
+								<img
+									key={card.cid}
+									src={card.art}
+									alt={card.name}
+									className={`cursor-pointer object-cover ${
+										deck.find((c) => c.cid === card.cid) ? "opacity-50" : "opacity-100"
+									}`}
+									onClick={() => clickCard(card)}
+								/>
+							);
+						})}
+				</div>
+			</div>
+		</div>
+	);
 }
