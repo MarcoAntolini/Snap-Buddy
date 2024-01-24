@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { shuffle } from "@/hooks/utils";
@@ -159,7 +158,6 @@ export default function Home() {
 
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-between p-10">
-			<ThemeToggle />
 			<Button variant="default">Button</Button>
 			{/* input that takes the base64 with a button that calls generateDeck() */}
 			<input
