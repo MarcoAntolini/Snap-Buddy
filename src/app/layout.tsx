@@ -26,7 +26,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 			<body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
 					<Header />
-					<main>{children}</main>
+					<main className="min-h-[calc(100vh-56px-56px)]">{children}</main>
 					<Footer />
 					<Toaster />
 				</ThemeProvider>

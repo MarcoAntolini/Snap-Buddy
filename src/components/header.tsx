@@ -1,11 +1,10 @@
-import Link from "next/link";
-
-import { Icons } from "@/components/icons";
 import { MainNav } from "@/components/main-nav";
 import { MobileNav } from "@/components/mobile-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { FaGithub } from "react-icons/fa";
 
 export function Header() {
 	return (
@@ -24,7 +23,7 @@ export function Header() {
 									"w-9 px-0",
 								)}
 							>
-								<Icons.gitHub className="h-4 w-4" />
+								<FaGithub className="h-4 w-4" />
 								<span className="sr-only">GitHub</span>
 							</div>
 						</Link>

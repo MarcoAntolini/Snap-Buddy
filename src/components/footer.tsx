@@ -1,9 +1,9 @@
 export function Footer() {
 	return (
 		<footer className="py-6 md:px-8 md:py-0">
-			<div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+			<div className="container flex flex-col items-center justify-center gap-4 md:h-14 md:flex-row">
 				<p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-					Built by{" "}
+					© 2023 Snap Buddy™. Built by{" "}
 					<a
 						href="https://marcoantolini.com"
 						target="_blank"
@@ -12,16 +12,7 @@ export function Footer() {
 					>
 						Marco Antolini
 					</a>
-					. The source code is available on{" "}
-					<a
-						href="https://github.com/MarcoAntolini/Snap-Buddy"
-						target="_blank"
-						rel="noreferrer"
-						className="font-medium underline underline-offset-4"
-					>
-						GitHub
-					</a>
-					.
+					. All rights reserved.
 				</p>
 			</div>
 		</footer>

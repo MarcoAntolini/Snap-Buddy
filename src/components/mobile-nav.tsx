@@ -1,14 +1,14 @@
 "use client";
 
-import Link, { LinkProps } from "next/link";
-import { useRouter } from "next/navigation";
-import * as React from "react";
-
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { navLinks } from "@/data/links";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link, { LinkProps } from "next/link";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 
 export function MobileNav() {
 	const [open, setOpen] = React.useState(false);
@@ -48,7 +48,7 @@ export function MobileNav() {
 			</SheetTrigger>
 			<SheetContent side="left" className="pr-0">
 				<MobileLink href="/" className="flex items-center" onOpenChange={setOpen}>
-					<img src="/logo.png" alt="logo" className="mr-2 h-4 w-4" />
+					<Image src="/logo.png" alt="logo" width={16} height={16} className="mr-2 h-4 w-4" />
 					<span className="font-bold">Snap Buddy</span>
 				</MobileLink>
 				<ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">

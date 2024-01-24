@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
 import { navLinks } from "@/data/links";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function MainNav() {
 	const pathname = usePathname();
@@ -12,7 +12,7 @@ export function MainNav() {
 	return (
 		<div className="mr-4 hidden md:flex">
 			<Link href="/" className="mr-6 flex items-center space-x-2">
-				<img src="/logo.png" alt="logo" className="h-6 w-6" />
+				<Image src="/logo.png" alt="logo" width={24} height={24} className="h-6 w-6" />
 				<span className="hidden font-bold sm:inline-block">Snap Buddy</span>
 			</Link>
 			<nav className="flex items-center gap-6 text-sm">
@@ -28,6 +28,7 @@ export function MainNav() {
 						{link.name}
 					</Link>
 				))}
+				<span className="text-foreground/60">More features coming soon...</span>
 			</nav>
 		</div>
 	);
